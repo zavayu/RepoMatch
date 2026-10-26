@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.env.*
+!.env.example
+data/working/
+tmp-read/
+build/
+dist/
+data/snapshots/*/repos.readable.json

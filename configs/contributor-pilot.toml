@@ -1,0 +1,17 @@
+database = "data/working/contributor-pilot.sqlite3"
+target_count = 3000
+max_file_bytes = 100000
+max_manifests = 6
+request_interval = 1.0
+timeout = 30.0
+retries = 4
+max_wait = 60.0
+
+[sampling]
+languages = ["Python", "JavaScript", "TypeScript", "Java", "C++", "C#", "Go", "Rust"]
+star_bands = ["small", "medium", "large"]
+quota = 65
+newcomer_quota = 60
+sort = "stars"
+qualifiers = " pushed:>=2025-10-23 size:>0"
+

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "repomatch"
+version = "0.1.0"
+description = "Reproducible GitHub repository collection for personalized open source matching"
+requires-python = ">=3.12"
+dependencies = ["python-dotenv>=1.0,<2"]
+
+[project.scripts]
+repomatch = "repomatch.collector.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
