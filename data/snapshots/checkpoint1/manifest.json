@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-26T05:15:41.068166+00:00",
+  "record_count": 3000,
+  "dataset_file": "repos.jsonl",
+  "sha256": "8f5f085b2bb82354e7197efe456b0e0987c2a7aa8f4353fc442c1ee3c6ea821c",
+  "dataset_bytes": 137724784,
+  "config": {
+    "database": "data/working/collector.sqlite3",
+    "target_count": 3000,
+    "max_file_bytes": 100000,
+    "max_manifests": 6,
+    "request_interval": 1.0,
+    "timeout": 30.0,
+    "retries": 4,
+    "max_wait": 60.0,
+    "searches": [
+      {
+        "name": "python-small",
+        "query": "language:\"Python\" stars:10..99 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "python-medium",
+        "query": "language:\"Python\" stars:100..999 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "python-large",
+        "query": "language:\"Python\" stars:>=1000 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "javascript-small",
+        "query": "language:\"JavaScript\" stars:10..99 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "javascript-medium",
+        "query": "language:\"JavaScript\" stars:100..999 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "javascript-large",
+        "query": "language:\"JavaScript\" stars:>=1000 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "typescript-small",
+        "query": "language:\"TypeScript\" stars:10..99 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "typescript-medium",
+        "query": "language:\"TypeScript\" stars:100..999 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "typescript-large",
+        "query": "language:\"TypeScript\" stars:>=1000 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "java-small",
+        "query": "language:\"Java\" stars:10..99 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "java-medium",
+        "query": "language:\"Java\" stars:100..999 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "java-large",
+        "query": "language:\"Java\" stars:>=1000 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "cpp-small",
+        "query": "language:\"C++\" stars:10..99 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "cpp-medium",
+        "query": "language:\"C++\" stars:100..999 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "cpp-large",
+        "query": "language:\"C++\" stars:>=1000 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "csharp-small",
+        "query": "language:\"C#\" stars:10..99 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "csharp-medium",
+        "query": "language:\"C#\" stars:100..999 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "csharp-large",
+        "query": "language:\"C#\" stars:>=1000 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "go-small",
+        "query": "language:\"Go\" stars:10..99 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "go-medium",
+        "query": "language:\"Go\" stars:100..999 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "go-large",
+        "query": "language:\"Go\" stars:>=1000 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "rust-small",
+        "query": "language:\"Rust\" stars:10..99 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "rust-medium",
+        "query": "language:\"Rust\" stars:100..999 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      },
+      {
+        "name": "rust-large",
+        "query": "language:\"Rust\" stars:>=1000 fork:false archived:false is:public",
+        "quota": 125,
+        "sort": "updated",
+        "order": "desc"
+      }
+    ]
+  },
+  "collection_status": {
+    "complete": 2928,
+    "partial": 72
+  },
+  "notes": [
+    "Partial records retain explicit failure states.",
+    "Source files are pinned per repository; language statistics are fetched live.",
+    "Search ordering and GitHub content can change between collection runs."
+  ]
+}

@@ -10,3 +10,4 @@ tmp-read/
 build/
 dist/
 data/snapshots/*/repos.readable.json
+data/snapshots/*/repos.jsonl
