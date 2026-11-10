@@ -1,7 +1,6 @@
 """Fetch repository evidence at one commit, keeping errors distinct from absence."""
 
 import base64
-import json
 import logging
 from pathlib import PurePosixPath
 from urllib.parse import quote
@@ -216,18 +215,18 @@ def enrich_one(client, candidate: dict, config) -> dict:
     return record
 
 
-def enrich(client, store, config, *, limit=None, retry_failed=False, refresh=False):
-    processed = 0
-    for row in store.pending(retry_failed=retry_failed, refresh=refresh, limit=limit):
+def enrich(client, store, config):
+    candidates = store.pending()
+    for index, candidate in enumerate(candidates, start=1):
+        name = candidate["full_name"]
         try:
-            record = enrich_one(client, json.loads(row["candidate"]), config)
-            store.save_record(record)
-            processed += 1
-            LOG.info("Collected %s", row["full_name"])
+            record = enrich_one(client, candidate, config)
         except GitHubError as error:
-            store.fail(row["id"], str(error))
-            if is_fatal_error(error) or error.status is None:
+            if is_fatal_error(error) or error.status is None or error.status >= 500:
                 raise
-            LOG.warning("Failed %s: %s", row["full_name"], error)
-    return processed
+            store.save(candidate["id"])
+            LOG.warning("[%d/%d] Failed %s: %s", index, len(candidates), name, error)
+        else:
+            store.save(candidate["id"], record)
+            LOG.info("[%d/%d] Collected %s", index, len(candidates), name)
 

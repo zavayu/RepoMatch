@@ -1,8 +1,4 @@
-"""Translate CLI arguments into collector operations.
-
-The CLI owns resource setup and cleanup. Collection modules do not need to know
-about terminal arguments, project-root resolution, or environment variables.
-"""
+"""Run discovery, enrichment, and export as one resumable collection."""
 
 import argparse
 import json
@@ -11,9 +7,7 @@ from pathlib import Path
 import re
 import sqlite3
 
-from .analyze import analyze_snapshot
 from .config import load_config
-from .dataset import generate_readable_copy
 from .discover import discover
 from .enrich import enrich
 from .environment import get_github_token
@@ -21,120 +15,60 @@ from .export import export_snapshot
 from .github import GitHubClient, GitHubError
 from .storage import Store
 
-
-def positive(value: str) -> int:
-    """Argparse validator for limits, which must be greater than zero."""
-    number = int(value)
-    if number <= 0:
-        raise argparse.ArgumentTypeError("Must be positive")
-    return number
+LOG = logging.getLogger(__name__)
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="repomatch")
-    commands = parser.add_subparsers(dest="group", required=True)
-    collect = commands.add_parser("collect")
-    actions = collect.add_subparsers(dest="action", required=True)
-
-    for action in ("discover", "enrich", "export", "analyze", "readable", "status"):
-        command = actions.add_parser(action)
-        command.add_argument(
-            "--root",
-            type=Path,
-            default=Path.cwd(),
-            help="Project root for all relative paths",
-        )
-        command.add_argument(
-            "--config",
-            type=Path,
-            default=Path("configs/collection.toml"),
-        )
-        if action in {"discover", "enrich"}:
-            command.add_argument("--limit", type=positive)
-        if action == "enrich":
-            command.add_argument("--retry-failed", action="store_true")
-            command.add_argument("--refresh", action="store_true")
-        if action in {"export", "analyze", "readable"}:
-            command.add_argument("--snapshot", required=True)
-
-    return parser
-
-
-def snapshot_directory(root: Path, name: str) -> Path:
-    """Keep snapshot names inside the project's snapshot directory."""
+def collect(root, name, limit=None):
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", name):
-        raise ValueError(
-            "Snapshot name must use letters, numbers, underscores, "
-            "or hyphens (max 64)"
-        )
-    return root / "data/snapshots" / name
+        raise ValueError("Use 1–64 letters, digits, hyphens, or underscores for the snapshot name.")
 
+    snapshot = root / "data/snapshots" / name
+    if snapshot.exists():
+        raise ValueError(f"Snapshot already exists: {snapshot}. Choose a new name.")
 
-def create_client(config, root: Path) -> GitHubClient:
-    token = get_github_token(root)
-    if not token:
-        raise ValueError("Set GITHUB_TOKEN in the project .env file or your shell before collection")
-    return GitHubClient(token, config)
+    config = load_config(root / "configs/collection.toml")
+    if limit is not None and not 1 <= limit <= config.target_count:
+        raise ValueError(f"--limit must be between 1 and {config.target_count}")
 
-
-def run_command(args):
-    """Run one operation; analysis and readable copies need no token or database."""
-    root = args.root.resolve()
-    snapshot = None
-    if args.action in {"export", "analyze", "readable"}:
-        snapshot = snapshot_directory(root, args.snapshot)
-
-    if args.action == "readable":
-        return generate_readable_copy(snapshot)
-
-    if args.action == "analyze":
-        return analyze_snapshot(snapshot, root / "reports" / args.snapshot)
-
-    config = load_config(root / args.config)
-    client = None
-    if args.action in {"discover", "enrich"}:
-        client = create_client(config, root)
-
-    store = Store(root / config.database)
+    store = Store(root / "data/working/runs" / name / "collector.sqlite3")
     try:
-        if args.action == "discover":
-            count = discover(client, store, config, args.limit)
-            return {"repository_count": count}
+        needs_discovery = not store.count()
+        if needs_discovery or store.pending_count():
+            token = get_github_token(root)
+            if not token:
+                raise ValueError("Set GITHUB_TOKEN in .env or in your shell.")
+            client = GitHubClient(token, config)
 
-        if args.action == "enrich":
-            processed = enrich(
-                client,
-                store,
-                config,
-                limit=args.limit,
-                retry_failed=args.retry_failed,
-                refresh=args.refresh,
-            )
-            return {"processed": processed, "status": store.stats()}
+            if needs_discovery:
+                candidates = discover(client, config, limit or config.target_count)
+                if not candidates:
+                    raise ValueError("No repositories found")
+                store.seed(candidates)
 
-        if args.action == "export":
-            return export_snapshot(store, config, snapshot)
+            enrich(client, store, config)
 
-        return store.stats()
+        return export_snapshot(store, config, snapshot)
     finally:
-        # Close the database even when collection fails or the user presses Ctrl+C.
         store.close()
 
 
 def main(argv=None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = argparse.ArgumentParser(prog="repomatch")
+    parser.add_argument("command", choices=("collect",))
+    parser.add_argument("--snapshot", required=True, help="Name for the new snapshot")
+    parser.add_argument("--limit", type=int, help="Maximum candidates for a new run")
+    args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
     try:
-        result = run_command(args)
-        print(json.dumps(result, indent=2))
-        return 0
-    except (ValueError, OSError, sqlite3.Error, GitHubError, KeyError, TypeError) as error:
-        logging.error("%s", error)
+        result = collect(Path.cwd(), args.snapshot, args.limit)
+    except (ValueError, OSError, sqlite3.Error, GitHubError) as error:
+        LOG.error("%s", error)
         return 1
     except KeyboardInterrupt:
-        logging.warning(
-            "Interrupted. Completed repositories and discovery progress are saved."
-        )
+        LOG.warning("Interrupted. Rerun the same command to resume saved work.")
         return 130
 
+    LOG.info("Wrote data/snapshots/%s/repos.jsonl", args.snapshot)
+    print(json.dumps(result["collection_status"], indent=2))
+    return 0
