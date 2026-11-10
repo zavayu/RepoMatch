@@ -16,6 +16,7 @@ def main():
     if args.top < 1:
         parser.error("--top must be positive")
 
+    # Build the search index once and reuse it for every query in this session
     repos = load_repositories(args.dataset)
     matcher = RepoMatch(repos)
     print(f"Loaded {len(repos):,} repositories | Mode: {args.mode}")
@@ -33,6 +34,7 @@ def main():
             skills = input("Enter your skills (comma-separated): ").split(",")
 
         print("\nFinding recommendations...\n")
+        # Keep the usual 30 candidates unless the user asks for more results
         results = matcher.recommend(
             query, skills, top_n=args.top, candidates=max(30, args.top), bm25_only=bm25_only
         )

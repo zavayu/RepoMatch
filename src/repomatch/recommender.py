@@ -10,10 +10,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 def words(s):
+    # Preserve punctuation used in technology names such as C++, C# and Node.js
     return re.findall(r"[a-z0-9][a-z0-9.+#_-]*", s.lower())
 
 
 def unwrap(x):
+    # Collector fields can wrap their content with a collection status
     if isinstance(x, dict) and "status" in x and "data" in x:
         x = x["data"]
 
@@ -42,6 +44,7 @@ def prepare(r):
     if language:
         languages.add(language)
 
+    # Extract dependency names from JSON manifests for skill matching
     dependencies = set()
     manifests = r.get("manifests") or {}
     entries = manifests.get("data", []) if isinstance(manifests, dict) else manifests
@@ -70,6 +73,7 @@ def prepare(r):
         for s in languages | set(map(str, topics)) | dependencies
     }
 
+    # Combine searchable fields and cap how much long documents contribute
     description = unwrap(m.get("description") or r.get("description"))
 
     content = " ".join([
@@ -139,6 +143,7 @@ class RepoMatch:
             if skill.strip()
         }
 
+        # BM25 picks the shortlist that TF-IDF and skill matching can reorder
         scores = self.bm25.get_scores(words(query))
         candidate_ids = sorted(
             range(len(self.repos)),
@@ -153,6 +158,7 @@ class RepoMatch:
         for i in candidate_ids:
             repo = self.repos[i]
             raw_bm25 = float(scores[i])
+            # Scale positive BM25 scores to match the range of the other signals
             keyword = max(0.0, raw_bm25) / highest if highest > 0 else 0.0
             matched = sorted(user_skills & repo["skills"])
             skill = len(matched) / len(user_skills) if user_skills else 0.0

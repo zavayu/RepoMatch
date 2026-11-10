@@ -9,6 +9,7 @@ from repomatch.recommender import RepoMatch, load_repositories
 
 TOP = 10
 CANDIDATES = 30
+# Each variant sets three flags in order: BM25 only, use TF-IDF, use skills
 VARIANTS = {
     "bm25": (True, False, False),
     "bm25+tfidf": (False, True, False),
@@ -29,6 +30,7 @@ def evaluate_case(matcher, case, repo_ids):
             use_tfidf=use_tfidf,
         )
 
+    # Judge each repository once even when multiple variants retrieve it
     pool = {
         repo_ids[result["name"]]: result
         for ranking in rankings.values()
@@ -38,6 +40,7 @@ def evaluate_case(matcher, case, repo_ids):
 
 
 def dcg(grades):
+    # Reward higher relevance grades more and discount results farther down the list
     return sum(
         (2 ** grade - 1) / math.log2(rank + 2)
         for rank, grade in enumerate(grades)
@@ -52,6 +55,7 @@ def score_case(case, rankings, pool, repo_ids, judgments, matcher):
     if missing:
         raise ValueError(f"{case['id']} needs judgments for repo IDs {sorted(missing)}")
 
+    # Compare each ranking with the best ordering of the saved grades
     ideal = dcg(sorted(grades.values(), reverse=True)[:TOP])
     result = {"pool_size": len(pool)}
     if ideal:
@@ -60,6 +64,7 @@ def score_case(case, rankings, pool, repo_ids, judgments, matcher):
             for name, ranking in rankings.items()
         }
 
+    # Check which known matches reach the candidate list before reranking
     known = set(case.get("known_relevant", []))
     if known:
         candidates = matcher.recommend(
@@ -101,6 +106,7 @@ def main():
     if args.action == "pool":
         for case in cases:
             _, pool = evaluate_case(matcher, case, repo_ids)
+            # Show candidates alphabetically and hide their original ranks for blind judging
             projects = [
                 {"id": repo_id, "name": repo["name"], "language": repo["language"],
                  "description": repo["description"]}
