@@ -95,21 +95,17 @@ def load_repositories(path):
     repos = []
     seen = set()
 
-    for line in Path(path).read_text(encoding="utf-8").splitlines():
+    with Path(path).open(encoding="utf-8") as source:
+        for line in source:
+            if not line.strip():
+                continue
 
-        if not line.strip():
-            continue
-
-        r = prepare(json.loads(line))
-
-        if r["name"] not in seen:
-
-            repos.append(r)
-
-            seen.add(r["name"])
+            repo = prepare(json.loads(line))
+            if repo["name"] not in seen:
+                repos.append(repo)
+                seen.add(repo["name"])
 
     if not repos:
-
         raise ValueError("No repositories found in dataset")
 
     return repos
@@ -121,70 +117,47 @@ class RepoMatch:
             raise ValueError("At least one repository is required")
 
         self.repos = repos
-
-
-        self.bm25 = BM25Okapi(
-            [words(r["text"]) or [""] for r in repos]
-        )
-
-
+        self.bm25 = BM25Okapi([words(repo["text"]) or [""] for repo in repos])
         self.vectorizer = TfidfVectorizer(tokenizer=words, token_pattern=None)
-        self.vectors = self.vectorizer.fit_transform(
+        self.vectors = self.vectorizer.fit_transform([repo["text"] for repo in repos])
 
-            [r["text"] for r in repos]
-        )
-
-    def recommend(self, query, skills=None, top_n=5, candidates=30):
+    def recommend(self, query, skills=None, top_n=5, candidates=30, *, bm25_only=False):
         if not query.strip():
-
             raise ValueError("Query cannot be empty")
-
         if top_n < 1 or candidates < 1:
             raise ValueError("top_n and candidates must be positive")
 
-        skills = {
-            s.strip().lower().replace("_", "-")
-            for s in (skills or [])
-            if s.strip()
+        if bm25_only:
+            skills = ()
+        user_skills = {
+            skill.strip().lower().replace("_", "-")
+            for skill in (skills or ())
+            if skill.strip()
         }
 
         scores = self.bm25.get_scores(words(query))
-
-        ids = sorted(
+        candidate_ids = sorted(
             range(len(self.repos)),
             key=lambda i: (-scores[i], self.repos[i]["name"])
         )[:candidates]
 
-        highest = max((scores[i] for i in ids), default=0)
-
-        query_vector =   self.vectorizer.transform([query])
-
+        highest = float(scores[candidate_ids[0]])
+        query_vector = None if bm25_only else self.vectorizer.transform([query])
         results = []
-
-        for i in ids:
+        for i in candidate_ids:
             repo = self.repos[i]
+            raw_bm25 = float(scores[i])
+            keyword = max(0.0, raw_bm25) / highest if highest > 0 else 0.0
+            matched = sorted(user_skills & repo["skills"])
+            skill = len(matched) / len(user_skills) if user_skills else 0.0
 
-            keyword = (
+            tfidf = 0.0
+            total = raw_bm25
+            if query_vector is not None:
+                tfidf = float(cosine_similarity(query_vector, self.vectors[i])[0][0])
+                total = 0.35 * keyword + 0.45 * tfidf + 0.20 * skill
 
-
-                max(0.0, float(scores[i])) / highest
-                if highest > 0 else 0.0
-            )
-
-
-            tfidf = float(
-                cosine_similarity(query_vector, self.vectors[i])[0][0]
-            )
-
-
-            matched = sorted(skills & repo["skills"])
-            skill = len(matched) / len(skills) if skills else 0.0
-
-
-
-            total = 0.35 * keyword + 0.45 * tfidf + 0.20 * skill
             reasons = []
-
             if matched:
                 reasons.append("matching skills: " + ", ".join(matched))
             if keyword > 0:
@@ -203,7 +176,6 @@ class RepoMatch:
                 "reasons": reasons
             })
 
-        return sorted(
-            results,
-            key=lambda r: (-r["score"], r["name"])
-        )[:top_n]
+        if not bm25_only:
+            results.sort(key=lambda result: (-result["score"], result["name"]))
+        return results[:top_n]

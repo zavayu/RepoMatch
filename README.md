@@ -112,14 +112,24 @@ Run the demo:
 python demo.py
 ```
 
-Enter your project interests and programming skills to receive recommendations.
+Enter a project query and comma-separated programming skills. The demo defaults
+to the bundled 30-repository sample and returns up to five results.
+
+If you have the full Checkpoint 1 JSONL snapshot locally, compare both modes
+using the same query:
+
+```powershell
+python demo.py --dataset data/snapshots/checkpoint1/repos.jsonl --mode checkpoint2 --top 10 --debug
+python demo.py --dataset data/snapshots/checkpoint1/repos.jsonl --mode bm25 --top 10 --debug
+```
+
+The BM25 baseline takes only the query and ranks by raw BM25. The debug view
+shows normalized BM25 and the TF-IDF and skill scores used in Checkpoint 2.
+TF-IDF and skill scores are zero in BM25 mode.
+
 ## More information
 
 - [Collector guide](docs/collector.md): sampling, command options, and troubleshooting.
 - [Dataset guide](docs/dataset.md): collected fields, file limits, and status meanings.
 
 Run the offline tests with `python -m unittest discover -s tests -v`.
-
-
-
-
