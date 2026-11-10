@@ -82,6 +82,7 @@ def prepare(r):
     ])
 
     return {
+        "id": r.get("id"),
         "name": name,
         "url": m.get("html_url") or r.get("html_url") or f"https://github.com/{name}",
         "language": language,
@@ -121,7 +122,10 @@ class RepoMatch:
         self.vectorizer = TfidfVectorizer(tokenizer=words, token_pattern=None)
         self.vectors = self.vectorizer.fit_transform([repo["text"] for repo in repos])
 
-    def recommend(self, query, skills=None, top_n=5, candidates=30, *, bm25_only=False):
+    def recommend(
+        self, query, skills=None, top_n=5, candidates=30, *,
+        bm25_only=False, use_tfidf=True,
+    ):
         if not query.strip():
             raise ValueError("Query cannot be empty")
         if top_n < 1 or candidates < 1:
@@ -142,7 +146,9 @@ class RepoMatch:
         )[:candidates]
 
         highest = float(scores[candidate_ids[0]])
-        query_vector = None if bm25_only else self.vectorizer.transform([query])
+        query_vector = None
+        if use_tfidf and not bm25_only:
+            query_vector = self.vectorizer.transform([query])
         results = []
         for i in candidate_ids:
             repo = self.repos[i]
@@ -152,9 +158,11 @@ class RepoMatch:
             skill = len(matched) / len(user_skills) if user_skills else 0.0
 
             tfidf = 0.0
-            total = raw_bm25
             if query_vector is not None:
                 tfidf = float(cosine_similarity(query_vector, self.vectors[i])[0][0])
+
+            total = raw_bm25
+            if not bm25_only:
                 total = 0.35 * keyword + 0.45 * tfidf + 0.20 * skill
 
             reasons = []
