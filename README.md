@@ -82,9 +82,44 @@ python -m repomatch collect readable --snapshot checkpoint1
 This creates `repos.readable.json` beside `repos.jsonl`. JSONL remains the main
 dataset. Share snapshots with your teammate rather than the working database.
 
+
+
+## Checkpoint 2: Recommendation Algorithm
+
+RepoMatch recommends GitHub repositories based on user interests and programming skills.
+
+### How It Works
+
+1. **BM25 (35%):** Finds the top 30 repositories based on keyword relevance.
+2. **TF-IDF (45%):** Uses cosine similarity to compare the user's query with repository text.
+3. **Skill Matching (20%):** Compares user skills with repository technologies.
+
+The algorithm combines these scores and returns the top 5 recommendations.
+
+### How to Run
+
+Install dependencies from the repository root:
+
+```powershell
+python -m pip install -e .
+```
+
+Make sure `data/repositories.jsonl` contains the sample dataset.
+
+Run the demo:
+
+```powershell
+python demo.py
+```
+
+Enter your project interests and programming skills to receive recommendations.
 ## More information
 
 - [Collector guide](docs/collector.md): sampling, command options, and troubleshooting.
 - [Dataset guide](docs/dataset.md): collected fields, file limits, and status meanings.
 
 Run the offline tests with `python -m unittest discover -s tests -v`.
+
+
+
+
