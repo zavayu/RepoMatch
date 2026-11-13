@@ -9,5 +9,7 @@ data/working/
 tmp-read/
 build/
 dist/
+node_modules/
+*.tsbuildinfo
 data/snapshots/*/repos.readable.json
 data/snapshots/*/repos.jsonl
