@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Annotated, Literal
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel, Field, StringConstraints
 
@@ -13,8 +14,11 @@ from repomatch.recommender import RepoMatch, load_repositories
 
 @asynccontextmanager
 async def lifespan(app):
+    project_root = Path(__file__).resolve().parents[2]
+    load_dotenv(project_root / ".env")
+
     # Build the index once, rather than once per search
-    default_dataset = Path(__file__).resolve().parents[2] / "data/repositories.jsonl"
+    default_dataset = project_root / "data/repositories.jsonl"
     dataset = Path(os.environ.get("REPOMATCH_DATASET", default_dataset))
     app.state.matcher = RepoMatch(load_repositories(dataset))
     yield

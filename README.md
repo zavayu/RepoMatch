@@ -41,7 +41,15 @@ In a second terminal at the repository root, start the search API:
 Open the local URL printed by Vite. Search by project interests and optional
 comma-separated skills. Choose relevance + skills or keyword-only matching, and
 expand a result to inspect its ranking signals. The API uses the bundled dataset.
-Set `REPOMATCH_DATASET` to another JSONL file before starting the API to use it.
+Set `REPOMATCH_DATASET` in the root `.env` file to use another JSONL dataset:
+
+```dotenv
+REPOMATCH_DATASET=data/repositories.jsonl
+```
+
+Relative dataset paths start from the directory where you launch the API.
+Restart the API after changing the dataset. Terminal environment variables take
+precedence over `.env` values.
 
 Vite forwards `/api` requests to the Python server at `127.0.0.1:8000`.
 Both servers must be running for search to work. This is a local development
