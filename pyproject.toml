@@ -16,7 +16,9 @@ dependencies = [
     "PyJWT",
     "email-validator",
     "pwdlib[argon2]"
-][project.scripts]
+]
+
+[project.scripts]
 repomatch = "repomatch.collector.cli:main"
 
 [tool.setuptools.packages.find]

@@ -6,7 +6,8 @@ import {
   CircleAlert,
   GitFork,
   Search,
-} from 'lucide-react'
+} 
+from 'lucide-react'
 import { searchRepositories } from './api'
 import type { SearchMode, SearchResponse } from './api'
 import RepositoryResult from './RepositoryResult'
@@ -218,11 +219,33 @@ export default function App() {
               </button>
             ))}
           </div>
+
+          <div className="mt-8 flex flex-col items-center gap-3 rounded-xl border border-dashed border-line bg-white p-6 text-center">
+            <p className="text-sm font-medium text-ink">
+              Want to find repositories based on your experience?
+            </p>
+
+            <label className="cursor-pointer rounded-lg border border-line bg-surface px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-accent-soft">
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) alert(`Selected: ${f.name}`)
+                }}
+              />
+              Upload Resume
+            </label>
+
+            <p className="text-xs text-muted">
+              PDF, DOC, or DOCX
+            </p>
+          </div>
         </section>
 
         <section
-          aria-labelledby="results-heading"
-          aria-busy={loading}
+          aria-labelledby="results-heading"          aria-busy={loading}
           className="mt-14 sm:mt-16"
         >
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
