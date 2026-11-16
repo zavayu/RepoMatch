@@ -10,7 +10,6 @@ import {
 import { searchRepositories } from './api'
 import type { SearchMode, SearchResponse } from './api'
 import RepositoryResult from './RepositoryResult'
-
 const examples = ['Online book reader', 'Web crawler', 'Developer tools']
 
 export default function App() {
@@ -90,7 +89,7 @@ export default function App() {
       >
         Skip to search
       </a>
-
+      
       <header className="border-b border-line">
         <div className="mx-auto flex h-20 max-w-5xl items-center justify-between gap-4 px-5 sm:px-10">
           <div className="flex items-center gap-2.5">

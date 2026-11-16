@@ -66,3 +66,65 @@ Then collect a small sample and run the demo with it.
 python -m repomatch collect --snapshot new-sample --limit 30
 python demo.py --dataset data/snapshots/new-sample/repos.jsonl
 ```
+
+
+
+
+
+
+
+
+## Login and Signup
+
+RepoMatch uses FastAPI, SQLite, and JWT for user authentication.
+
+- Users can sign up and log in with an email and password.
+- Passwords are securely hashed.
+- Each user has a unique ID.
+- Users must log in before accessing RepoMatch.
+
+## Setup
+
+**1. Install Python dependencies:**
+
+```bash
+python -m pip install -e .
+```
+
+**2. Create a `.env` file** in the main project folder.
+
+Generate a secret key:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Add it to `.env`:
+
+```text
+REPOMATCH_AUTH_SECRET=your_generated_key
+```
+
+**3. Start the backend:**
+
+```bash
+python -m repomatch.api
+```
+
+**4. Start the frontend in another terminal:**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+**5. Open:** http://localhost:5173
+
+Create an account or log in to access RepoMatch.
+
+## Database
+
+User accounts are stored in `users.db`, which is automatically created by the backend.
+
+Each developer has their own local database. The database and `.env` file are not uploaded to GitHub.

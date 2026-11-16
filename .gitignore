@@ -13,3 +13,5 @@ node_modules/
 *.tsbuildinfo
 data/snapshots/*/repos.readable.json
 data/snapshots/*/repos.jsonl
+users.db
+users_backup.db

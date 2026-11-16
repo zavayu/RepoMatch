@@ -10,8 +10,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field, StringConstraints
 
 from repomatch.recommender import RepoMatch, load_repositories
-
-
+from repomatch.auth import router, init_db
+from fastapi import Depends
+from repomatch.auth import require_user
 @asynccontextmanager
 async def lifespan(app):
     project_root = Path(__file__).resolve().parents[2]
@@ -21,11 +22,12 @@ async def lifespan(app):
     default_dataset = project_root / "data/repositories.jsonl"
     dataset = Path(os.environ.get("REPOMATCH_DATASET", default_dataset))
     app.state.matcher = RepoMatch(load_repositories(dataset))
+    init_db()
     yield
 
 
 app = FastAPI(title="RepoMatch", lifespan=lifespan)
-
+app.include_router(router)
 
 class SearchRequest(BaseModel):
     query: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
@@ -40,7 +42,7 @@ def status():
 
 
 @app.post("/api/search")
-def search(request: SearchRequest):
+def search(request: SearchRequest, user_id: int = Depends(require_user)):
     results = app.state.matcher.recommend(
         request.query,
         request.skills,

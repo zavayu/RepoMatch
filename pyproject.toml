@@ -12,9 +12,11 @@ dependencies = [
     "rank-bm25",
     "scikit-learn",
     "fastapi>=0.115,<1",
-    "uvicorn>=0.34,<1"
-]
-[project.scripts]
+    "uvicorn>=0.34,<1",
+    "PyJWT",
+    "email-validator",
+    "pwdlib[argon2]"
+][project.scripts]
 repomatch = "repomatch.collector.cli:main"
 
 [tool.setuptools.packages.find]
