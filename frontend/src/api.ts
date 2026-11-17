@@ -22,13 +22,11 @@ export interface SearchResponse {
 export async function searchRepositories(
   query: string,
   skills: string[],
-  mode: SearchMode,
-  top_n: number,
 ): Promise<SearchResponse> {
   const response = await fetch('/api/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, skills, mode, top_n }),
+    body: JSON.stringify({ query, skills }),
     signal: AbortSignal.timeout(30000),
   })
 

@@ -11,6 +11,7 @@ export default function Profile() {
   const [preferences, setPreferences] = useState<ProfilePreferences>({ skills: [], interests: [] })
   const [resume, setResume] = useState<File | null>(null)
   const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -48,7 +49,9 @@ export default function Profile() {
     setError('')
     try {
       savePreferences(user.id, preferences)
+      setSaved(true)
     } catch {
+      setSaved(false)
       setError('Could not save in this browser. Your changes are still shown here.')
     }
   }
@@ -95,6 +98,7 @@ export default function Profile() {
 
               <div className="mt-3 flex flex-wrap items-center gap-4">
                 <button type="submit" className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent-hover">Save profile</button>
+                <p className="text-sm text-muted">{saved ? 'Profile saved' : ''}</p>
               </div>
             </form>
           </>
