@@ -88,13 +88,6 @@ export default function App() {
               </button>
             </div>
 
-            {loggedIn && (
-              <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs text-muted">
-                <span className="min-w-0 break-words">{mode === 'keywords' ? 'Keyword search · profile skills are off' : skills ? `Search skills: ${skills}` : 'Add skills to personalize your search'}</span>
-                <Link to="/profile" className="shrink-0 text-accent underline-offset-4 hover:underline">Edit profile</Link>
-              </div>
-            )}
-
             <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted">
               <span>Try</span>
               {examples.map((example) => (
@@ -108,7 +101,10 @@ export default function App() {
               </summary>
               <fieldset disabled={loading} className="mt-4 grid gap-5 border-y border-line py-5 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <label htmlFor="skills" className="block text-xs text-muted">Skills for this search (optional)</label>
+                  <div className="flex items-center justify-between gap-3 text-xs">
+                    <label htmlFor="skills" className="text-muted">Skills for this search (optional)</label>
+                    {loggedIn && <Link to="/profile" className="shrink-0 text-accent underline-offset-4 hover:underline">Edit profile</Link>}
+                  </div>
                   <input id="skills" value={skills} onChange={(event) => setSkills(event.target.value)} disabled={mode === 'keywords'} placeholder="Python, JavaScript, React" className="mt-2 w-full border-b border-line bg-transparent py-2 text-sm placeholder:text-muted disabled:opacity-50" />
                 </div>
                 <div>

@@ -11,7 +11,6 @@ export default function Profile() {
   const [preferences, setPreferences] = useState<ProfilePreferences>({ skills: [], interests: [] })
   const [resume, setResume] = useState<File | null>(null)
   const [error, setError] = useState('')
-  const [saved, setSaved] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -42,7 +41,6 @@ export default function Profile() {
 
   function updatePreferences(field: keyof ProfilePreferences, values: string[]) {
     setPreferences((current) => ({ ...current, [field]: values }))
-    setSaved(false)
   }
 
   function save() {
@@ -50,7 +48,6 @@ export default function Profile() {
     setError('')
     try {
       savePreferences(user.id, preferences)
-      setSaved(true)
     } catch {
       setError('Could not save in this browser. Your changes are still shown here.')
     }
