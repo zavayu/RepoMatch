@@ -10,8 +10,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field, StringConstraints
 
 from repomatch.recommender import RepoMatch, load_repositories
-
-
+from repomatch.auth import router, init_db
 @asynccontextmanager
 async def lifespan(app):
     project_root = Path(__file__).resolve().parents[2]
@@ -21,17 +20,17 @@ async def lifespan(app):
     default_dataset = project_root / "data/repositories.jsonl"
     dataset = Path(os.environ.get("REPOMATCH_DATASET", default_dataset))
     app.state.matcher = RepoMatch(load_repositories(dataset))
+    init_db()
     yield
 
 
 app = FastAPI(title="RepoMatch", lifespan=lifespan)
-
+app.include_router(router)
 
 class SearchRequest(BaseModel):
     query: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
     skills: list[Annotated[str, Field(max_length=100)]] = Field(default_factory=list, max_length=50)
     mode: Literal["personalized", "keywords"] = "personalized"
-    top_n: int = Field(default=5, ge=1, le=20)
 
 
 @app.get("/api/status")
@@ -41,10 +40,13 @@ def status():
 
 @app.post("/api/search")
 def search(request: SearchRequest):
+    # Rank once so the frontend can page through a stable set of matches
+    repository_count = len(app.state.matcher.repos)
     results = app.state.matcher.recommend(
         request.query,
         request.skills,
-        top_n=request.top_n,
+        top_n=repository_count,
+        candidates=repository_count,
         bm25_only=request.mode == "keywords",
     )
     # Do not present zero-signal padding as a match

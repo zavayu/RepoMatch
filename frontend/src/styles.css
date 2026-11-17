@@ -1,14 +1,14 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-canvas: #f7f9f8;
-  --color-surface: #eef3f0;
-  --color-ink: #20382f;
-  --color-muted: #567168;
-  --color-line: #dce5df;
-  --color-accent: #23634c;
-  --color-accent-hover: #184d39;
-  --color-accent-soft: #d5e9de;
+  --color-canvas: #faf9f6;
+  --color-surface: #eeede8;
+  --color-ink: #252a28;
+  --color-muted: #656b67;
+  --color-line: #dcded7;
+  --color-accent: #17645a;
+  --color-accent-hover: #104c44;
+  --color-accent-soft: #e0ece6;
   --color-disabled: #687c72;
 }
 
@@ -23,5 +23,9 @@
 
   input {
     @apply caret-accent;
+  }
+
+  button:not(:disabled), select, summary {
+    cursor: pointer;
   }
 }
