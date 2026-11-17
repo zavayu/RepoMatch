@@ -88,9 +88,6 @@ export default function RepositoryResult({ repository: repo, mode }: Props) {
                     </>
                   )}
                 </dl>
-                <p className="mt-3">
-                  Relative scores, not confidence percentages.
-                </p>
               </div>
             </details>
           </div>
