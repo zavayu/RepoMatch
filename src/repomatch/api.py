@@ -11,8 +11,6 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from repomatch.recommender import RepoMatch, load_repositories
 from repomatch.auth import router, init_db
-from fastapi import Depends
-from repomatch.auth import require_user
 @asynccontextmanager
 async def lifespan(app):
     project_root = Path(__file__).resolve().parents[2]
@@ -42,7 +40,7 @@ def status():
 
 
 @app.post("/api/search")
-def search(request: SearchRequest, user_id: int = Depends(require_user)):
+def search(request: SearchRequest):
     results = app.state.matcher.recommend(
         request.query,
         request.skills,

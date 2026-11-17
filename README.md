@@ -81,7 +81,6 @@ RepoMatch uses FastAPI, SQLite, and JWT for user authentication.
 - Users can sign up and log in with an email and password.
 - Passwords are securely hashed.
 - Each user has a unique ID.
-- Users must log in before accessing RepoMatch.
 
 ## Setup
 
@@ -121,7 +120,7 @@ npm run dev
 
 **5. Open:** http://localhost:5173
 
-Create an account or log in to access RepoMatch.
+Search immediately, or optionally create an account or log in.
 
 ## Database
 

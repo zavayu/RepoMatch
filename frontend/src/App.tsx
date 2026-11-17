@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import {
   ArrowRight,
   ArrowUpRight,
   CircleAlert,
   GitFork,
   Search,
+  UserRound,
 } 
 from 'lucide-react'
 import { searchRepositories } from './api'
@@ -14,6 +16,7 @@ import RepositoryResult from './RepositoryResult'
 const examples = ['Online book reader', 'Web crawler', 'Developer tools']
 
 export default function App() {
+  const [loggedIn, setLoggedIn] = useState(false)
   const [query, setQuery] = useState('')
   const [skills, setSkills] = useState('')
   const [mode, setMode] = useState<SearchMode>('personalized')
@@ -23,6 +26,14 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const queryInput = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/me', { signal: controller.signal })
+      .then((response) => setLoggedIn(response.ok))
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -104,6 +115,18 @@ export default function App() {
               RepoMatch
             </span>
           </div>
+          {loggedIn ? (
+            <span role="img" aria-label="Logged in" title="Logged in" className="text-accent">
+              <UserRound size={23} aria-hidden="true" />
+            </span>
+          ) : (
+            <Link
+              to="/login"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+            >
+              Log in
+            </Link>
+          )}
         </div>
       </header>
 
