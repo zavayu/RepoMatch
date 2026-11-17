@@ -6,7 +6,6 @@ import { searchRepositories } from './api'
 import type { SearchResponse } from './api'
 import Header from './Header'
 import RepositoryResult from './RepositoryResult'
-import { loadPreferences } from './profilePreferences'
 
 const examples = ['Web crawler', 'Developer tools', 'Online book reader']
 const pageSize = 10
@@ -33,7 +32,7 @@ export default function App() {
       .then((user) => {
         if (!user || controller.signal.aborted) return
         setLoggedIn(true)
-        setSkills(loadPreferences(user.id).skills.join(', '))
+        setSkills(user.skills.join(', '))
       })
       .catch(() => {})
     return () => controller.abort()

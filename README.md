@@ -124,6 +124,6 @@ Search immediately, or optionally create an account or log in.
 
 ## Database
 
-User accounts are stored in `users.db`, which is automatically created by the backend.
+User accounts and saved skills are stored in `src/users.db`, which is automatically created by the backend.
 
 Each developer has their own local database. The database and `.env` file are not uploaded to GitHub.

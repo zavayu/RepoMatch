@@ -3,15 +3,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Upload } from 'lucide-react'
 import Header from './Header'
 import TagEditor from './TagEditor'
-import { loadPreferences, savePreferences } from './profilePreferences'
-import type { ProfilePreferences } from './profilePreferences'
+import { saveSkills } from './api'
+import type { UserProfile } from './api'
 
 export default function Profile() {
-  const [user, setUser] = useState<{ id: number; email: string } | null>(null)
-  const [preferences, setPreferences] = useState<ProfilePreferences>({ skills: [], interests: [] })
+  const [user, setUser] = useState<UserProfile | null>(null)
+  const [skills, setSkills] = useState<string[]>([])
   const [resume, setResume] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -26,10 +27,10 @@ export default function Profile() {
           return
         }
         if (!response.ok) throw new Error('Could not load your profile.')
-        const data = await response.json()
+        const data: UserProfile = await response.json()
         if (!controller.signal.aborted) {
           setUser(data)
-          setPreferences(loadPreferences(data.id))
+          setSkills(data.skills)
         }
       } catch {
         if (!controller.signal.aborted) setError('Could not load your profile. Please try again.')
@@ -40,19 +41,23 @@ export default function Profile() {
     return () => controller.abort()
   }, [navigate])
 
-  function updatePreferences(field: keyof ProfilePreferences, values: string[]) {
-    setPreferences((current) => ({ ...current, [field]: values }))
+  function updateSkills(values: string[]) {
+    setSkills(values)
+    setSaved(false)
   }
 
-  function save() {
-    if (!user) return
+  async function save() {
+    if (!user || saving) return
+    setSaving(true)
+    setSaved(false)
     setError('')
     try {
-      savePreferences(user.id, preferences)
+      setSkills(await saveSkills(skills))
       setSaved(true)
-    } catch {
-      setSaved(false)
-      setError('Could not save in this browser. Your changes are still shown here.')
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not save your skills. Please try again.')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -76,30 +81,32 @@ export default function Profile() {
             </section>
 
             <form onSubmit={(event) => { event.preventDefault(); save() }}>
-              <section aria-labelledby="skills-heading" className="border-b border-line py-7">
-                <h2 id="skills-heading" className="text-base font-medium">Skills</h2>
-                <p className="mt-1 text-sm text-muted">Languages and tools you work with.</p>
-                <TagEditor id="profile-skill" label="Skills" values={preferences.skills} onChange={(values) => updatePreferences('skills', values)} placeholder="e.g. Python or React" />
-              </section>
+              <fieldset disabled={saving}>
+                <section aria-labelledby="skills-heading" className="border-b border-line py-7">
+                  <h2 id="skills-heading" className="text-base font-medium">Skills</h2>
+                  <p className="mt-1 text-sm text-muted">Languages and tools you work with.</p>
+                  <TagEditor id="profile-skill" label="Skills" values={skills} onChange={updateSkills} placeholder="e.g. Python or React" />
+                </section>
 
-              <section aria-labelledby="resume-heading" className="py-7">
-                <h2 id="resume-heading" className="text-base font-medium">Resume <span className="ml-2 text-xs font-normal text-muted">Optional</span></h2>
-                <p id="resume-help" className="mt-1 text-sm text-muted">Extract skills from your resume.</p>
-                <div className="mt-4 flex flex-wrap items-center gap-4 rounded-lg border border-dashed border-line p-5">
-                  <Upload size={21} strokeWidth={1.5} className="shrink-0 text-muted" aria-hidden="true" />
-                  <div className="min-w-0 flex-1">
-                    <label htmlFor="resume" className="block text-sm">Choose a resume</label>
-                    <p className="mt-1 text-xs text-muted">PDF, DOC, or DOCX</p>
+                <section aria-labelledby="resume-heading" className="py-7">
+                  <h2 id="resume-heading" className="text-base font-medium">Resume <span className="ml-2 text-xs font-normal text-muted">Optional</span></h2>
+                  <p id="resume-help" className="mt-1 text-sm text-muted">Extract skills from your resume.</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-4 rounded-lg border border-dashed border-line p-5">
+                    <Upload size={21} strokeWidth={1.5} className="shrink-0 text-muted" aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <label htmlFor="resume" className="block text-sm">Choose a resume</label>
+                      <p className="mt-1 text-xs text-muted">PDF, DOC, or DOCX</p>
+                    </div>
+                    <input id="resume" type="file" accept=".pdf,.doc,.docx" aria-describedby="resume-help" onChange={(event) => setResume(event.target.files?.[0] || null)} className="w-full min-w-0 text-xs text-muted file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-line file:bg-transparent file:px-3 file:py-2 file:text-ink" />
+                    {resume && <p role="status" className="w-full break-all text-xs text-muted">Selected: {resume.name}. The file is cleared when you leave this page.</p>}
                   </div>
-                  <input id="resume" type="file" accept=".pdf,.doc,.docx" aria-describedby="resume-help" onChange={(event) => setResume(event.target.files?.[0] || null)} className="w-full min-w-0 text-xs text-muted file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-line file:bg-transparent file:px-3 file:py-2 file:text-ink" />
-                  {resume && <p role="status" className="w-full break-all text-xs text-muted">Selected: {resume.name}. The file is cleared when you leave this page.</p>}
-                </div>
-              </section>
+                </section>
 
-              <div className="mt-3 flex flex-wrap items-center gap-4">
-                <button type="submit" className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent-hover">Save profile</button>
-                <p className="text-sm text-muted">{saved ? 'Profile saved' : ''}</p>
-              </div>
+                <div className="mt-3 flex flex-wrap items-center gap-4">
+                  <button type="submit" className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50">{saving ? 'Saving...' : 'Save profile'}</button>
+                  <p role="status" className="text-sm text-muted">{saved ? 'Profile saved' : ''}</p>
+                </div>
+              </fieldset>
             </form>
           </>
         ) : !error && <p role="status" className="mt-10 text-sm text-muted">Loading profile...</p>}

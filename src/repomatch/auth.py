@@ -1,13 +1,15 @@
 
+import json
 import os
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Annotated
 
 import jwt
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, StringConstraints, field_validator
 from pwdlib import PasswordHash
 
 load_dotenv()
@@ -24,6 +26,21 @@ if not secret:
 class User(BaseModel):
     email: EmailStr
     password: str
+
+
+class SkillsUpdate(BaseModel):
+    skills: list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]] = Field(max_length=50)
+
+    @field_validator("skills")
+    @classmethod
+    def unique_skills(cls, skills):
+        seen = set()
+        result = []
+        for skill in skills:
+            if skill.casefold() not in seen:
+                seen.add(skill.casefold())
+                result.append(skill)
+        return result
 
 
 def init_db():
@@ -58,6 +75,11 @@ def init_db():
             """)
 
             db.execute("DROP TABLE old_users")
+
+        # Add skills without changing existing account IDs or password hashes
+        columns = [row[1] for row in db.execute("PRAGMA table_info(users)")]
+        if "skills" not in columns:
+            db.execute("ALTER TABLE users ADD COLUMN skills TEXT NOT NULL DEFAULT '[]'")
 
 
 def create_token(user_id: int):
@@ -150,12 +172,21 @@ def login(user: User, response: Response):
 def me(user_id: int = Depends(require_user)):
     with sqlite3.connect(db_path) as db:
         result = db.execute(
-            "SELECT email FROM users WHERE id = ?",
+            "SELECT email, skills FROM users WHERE id = ?",
             (user_id,),
         ).fetchone()
 
-    return {"id": user_id, "email": result[0]}
+    return {"id": user_id, "email": result[0], "skills": json.loads(result[1])}
 
+
+@router.put("/api/me/skills")
+def update_skills(update: SkillsUpdate, user_id: int = Depends(require_user)):
+    with sqlite3.connect(db_path) as db:
+        db.execute(
+            "UPDATE users SET skills = ? WHERE id = ?",
+            (json.dumps(update.skills), user_id),
+        )
+    return {"skills": update.skills}
 
 
 
